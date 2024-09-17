@@ -1,54 +1,59 @@
-let recettes = []; // Base de données temporaire
+const db = require("../config/db");
 
-// Obtenir toutes les recettes
-export function getAllRecipes(req, res) {
-  res.json(recettes);
-}
+// Récupérer toutes les recettes
+exports.getAllRecipes = (callback) => {
+  const query = "SELECT * FROM recipes";
+  db.query(query, (err, results) => {
+    if (err) {
+      return callback(err, null);
+    }
+    callback(null, results);
+  });
+};
 
-// Obtenir une recette par ID
-export function getRecipeById(req, res) {
-  const recette = recettes.find((r) => r.id === parseInt(req.params.id));
-  if (!recette) {
-    return res.status(404).json({ message: "Recette non trouvée" });
-  }
-  res.json(recette);
-}
+// Récupérer une recette par son ID
+exports.getRecipeById = (id, callback) => {
+  const query = "SELECT * FROM recipes WHERE id = ?";
+  db.query(query, [id], (err, result) => {
+    if (err) {
+      return callback(err, null);
+    }
+    callback(null, result[0]);
+  });
+};
 
-// Créer une nouvelle recette
-export function createRecipe(req, res) {
-  const nouvelleRecette = {
-    id: recettes.length + 1,
-    titre: req.body.titre,
-    ingredient: req.body.ingredient,
-    type: req.body.type,
-  };
-  recettes.push(nouvelleRecette);
-  res.status(201).json(nouvelleRecette);
-}
+// Ajouter une nouvelle recette
+exports.addRecipe = (recipeData, callback) => {
+  const { title, ingredients, type } = recipeData;
+  const query =
+    "INSERT INTO recipes (title, ingredients, type) VALUES (?, ?, ?)";
+  db.query(query, [title, ingredients, type], (err, result) => {
+    if (err) {
+      return callback(err, null);
+    }
+    callback(null, result);
+  });
+};
 
-// Mettre à jour une recette par ID
-export function updateRecipe(req, res) {
-  const recette = recettes.find((r) => r.id === parseInt(req.params.id));
-  if (!recette) {
-    return res.status(404).json({ message: "Recette non trouvée" });
-  }
+// Mettre à jour une recette
+exports.updateRecipe = (id, recipeData, callback) => {
+  const { title, ingredients, type } = recipeData;
+  const query =
+    "UPDATE recipes SET title = ?, ingredients = ?, type = ? WHERE id = ?";
+  db.query(query, [title, ingredients, type, id], (err, result) => {
+    if (err) {
+      return callback(err, null);
+    }
+    callback(null, result);
+  });
+};
 
-  // Mettre à jour les champs avec les données fournies
-  recette.titre = req.body.titre || recette.titre;
-  recette.ingredient = req.body.ingredient || recette.ingredient;
-  recette.description = req.body.description || recette.description;
-  recette.type = req.body.type || recette.type;
-
-  res.json(recette);
-}
-
-// Supprimer une recette par ID
-export function deleteRecipe(req, res) {
-  const index = recettes.findIndex((r) => r.id === parseInt(req.params.id));
-  if (index === -1) {
-    return res.status(404).json({ message: "Recette non trouvée" });
-  }
-
-  recettes.splice(index, 1);
-  res.status(204).send();
-}
+exports.deleteRecipe = (id, callback) => {
+  const query = "DELETE FROM recipes WHERE id = ?";
+  db.query(query, [id], (err, result) => {
+    if (err) {
+      return callback(err, null);
+    }
+    callback(null, result);
+  });
+};
